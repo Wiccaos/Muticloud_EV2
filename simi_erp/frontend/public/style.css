@@ -1,0 +1,31 @@
+/* Estilos personalizados para el ERP SIMI */
+body {
+    background-color: #f4f6f9;
+}
+
+.brand-simi {
+    color: #0a58ca;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.custom-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.btn-simi {
+    background-color: #0a58ca;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-simi:hover {
+    background-color: #084298;
+    color: white;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #e9f2ff;
+}

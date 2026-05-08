@@ -1,0 +1,32 @@
+
+services:
+  db:
+    build: 
+      context: ./backend
+    container_name: simi_postgres
+    environment:
+      POSTGRES_USER: simi_admin
+      POSTGRES_PASSWORD: simi_pass123
+      POSTGRES_DB: simi_erp_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - simi-net
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: simi_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - db
+    networks:
+      - simi-net
+
+networks:
+  simi-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

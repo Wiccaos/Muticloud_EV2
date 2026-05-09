@@ -149,7 +149,7 @@ yarn-debug.log*
 yarn-error.log*
 .npm
 
-# Variables de entorno (¡nunca subir credenciales!)
+# Variables de entorno 
 .env
 .env.local
 .env.production

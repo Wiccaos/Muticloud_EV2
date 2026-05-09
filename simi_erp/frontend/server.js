@@ -13,7 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Configuración de conexión a PostgreSQL
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'simi_admin',
-  host: 'db',
+  host: process.env.DB_HOST || 'db', // recibe la IP
   database: process.env.POSTGRES_DB || 'simi_erp_db',
   password: process.env.POSTGRES_PASSWORD || 'simi_pass123',
   port: 5432,

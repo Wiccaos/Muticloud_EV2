@@ -10,7 +10,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
         <div class="container d-flex justify-content-between">
-            <a class="navbar-brand brand-simi" href="#">Farmacias SIMI - Portal Seguro</a>
+            <a class="navbar-brand brand-simi" href="#">💊 Farmacias SIMI - Portal Seguro</a>
             <button id="btnLogout" class="btn btn-outline-danger btn-sm d-none" onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
     </nav>
@@ -45,11 +45,23 @@
                 <div class="card custom-card p-4">
                     <h5 class="mb-3">Añadir Nuevo Producto</h5>
                     <form id="addForm">
-                        <div class="mb-3"><label class="form-label small">Nombre</label><input type="text" class="form-control" id="nombre" required></div>
-                        <div class="mb-3"><label class="form-label small">Descripción</label><input type="text" class="form-control" id="desc"></div>
+                        <div class="mb-3">
+                            <label class="form-label small">Nombre</label>
+                            <input type="text" class="form-control" id="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Descripción</label>
+                            <input type="text" class="form-control" id="desc">
+                        </div>
                         <div class="row">
-                            <div class="col-6 mb-3"><label class="form-label small">Precio ($)</label><input type="number" class="form-control" id="precio" required></div>
-                            <div class="col-6 mb-3"><label class="form-label small">Stock</label><input type="number" class="form-control" id="stock" required></div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Precio ($)</label>
+                                <input type="number" class="form-control" id="precio" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small">Stock</label>
+                                <input type="number" class="form-control" id="stock" required>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-simi w-100">Guardar Producto</button>
                     </form>
@@ -60,7 +72,15 @@
                     <h5 class="mb-3">Inventario Actual</h5>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
-                            <thead class="table-light"><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th></tr></thead>
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                </tr>
+                            </thead>
                             <tbody id="tablaProductos"></tbody>
                         </table>
                     </div>
@@ -70,7 +90,16 @@
     </div>
 
     <script>
-        // Autenticación
+        // Función para dar formato CLP (Ej: $ 1.500)
+        const formatearCLP = (monto) => {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0
+            }).format(monto);
+        };
+
+        // Lógica de Autenticación MFA
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const res = await fetch('/api/login', {
@@ -85,7 +114,7 @@
             const data = await res.json();
             
             if (res.ok) {
-                localStorage.setItem('simi_token', data.token);
+                localStorage.setItem('simi_token', data.token); // Guardamos el Token
                 mostrarERP();
             } else {
                 document.getElementById('loginError').textContent = data.error;
@@ -93,7 +122,7 @@
             }
         });
 
-        // Configuración de peticiones seguras
+        // Configuración de peticiones seguras inyectando el Token
         const fetchSeguro = async (url, options = {}) => {
             const token = localStorage.getItem('simi_token');
             const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
@@ -102,16 +131,27 @@
             return res;
         };
 
+        // Cargar productos con la vista original
         async function cargarProductos() {
             const res = await fetchSeguro('/api/productos');
             const data = await res.json();
             const tbody = document.getElementById('tablaProductos');
             tbody.innerHTML = '';
+            
             data.forEach(p => {
-                tbody.innerHTML += `<tr><td><span class="badge bg-secondary">${p.id}</span></td><td class="fw-bold">${p.nombre}</td><td class="text-success">$${p.precio}</td><td>${p.stock}</td></tr>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge bg-secondary">${p.id}</span></td>
+                        <td class="fw-bold">${p.nombre}</td>
+                        <td class="text-muted small">${p.descripcion}</td>
+                        <td class="fw-bold text-success">${formatearCLP(p.precio)}</td>
+                        <td>${p.stock} un.</td>
+                    </tr>
+                `;
             });
         }
 
+        // Agregar un producto nuevo
         document.getElementById('addForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             await fetchSeguro('/api/productos', {
@@ -128,6 +168,7 @@
             cargarProductos();
         });
 
+        // Muestra la vista del ERP ocultando el login
         function mostrarERP() {
             document.getElementById('loginView').classList.add('d-none');
             document.getElementById('erpView').classList.remove('d-none');
@@ -135,12 +176,13 @@
             cargarProductos();
         }
 
+        // Cierra sesión y recarga la página
         function cerrarSesion() {
             localStorage.removeItem('simi_token');
             window.location.reload();
         }
 
-        // Auto-login si ya hay token válido
+        // Auto-login si ya hay un token válido guardado
         if (localStorage.getItem('simi_token')) mostrarERP();
     </script>
 </body>

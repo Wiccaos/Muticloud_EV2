@@ -11,14 +11,17 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuración de conexión a AWS RDS
+// Configuración de conexión dinámica (Local vs AWS RDS)
 const pool = new Pool({
   user: process.env.POSTGRES_USER || 'postgres',
-  host: process.env.DB_HOST,
-  database: process.env.POSTGRES_DB || 'postgres',
-  password: process.env.POSTGRES_PASSWORD,
+  host: process.env.DB_HOST || 'db', 
+  database: process.env.POSTGRES_DB || 'simi_erp_db',
+  password: process.env.POSTGRES_PASSWORD || 'simi_pass123',
   port: 5432,
-  ssl: { rejectUnauthorized: false }
+  // Si el host incluye 'rds.amazonaws.com' usa SSL, de lo contrario (local) es false
+  ssl: process.env.DB_HOST && process.env.DB_HOST.includes('rds.amazonaws.com') 
+        ? { rejectUnauthorized: false } 
+        : false
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'simi_clave_secreta_mfa';

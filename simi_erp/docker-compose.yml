@@ -1,19 +1,4 @@
 services:
-  db:
-    build: 
-      context: ./backend
-    container_name: simi_postgres
-    environment:
-      POSTGRES_USER: simi_admin
-      POSTGRES_PASSWORD: simi_pass123
-      POSTGRES_DB: simi_erp_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - simi-net
-
   frontend:
     build:
       context: ./frontend
@@ -21,15 +6,13 @@ services:
     ports:
       - "80:80"
     environment:
-      - DB_HOST=${DB_HOST:-db}
-    depends_on:
-      - db
+      - DB_HOST=${DB_HOST}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT_SECRET=simi_clave_secreta_mfa
     networks:
       - simi-net
 
 networks:
   simi-net:
     driver: bridge
-
-volumes:
-  postgres_data:

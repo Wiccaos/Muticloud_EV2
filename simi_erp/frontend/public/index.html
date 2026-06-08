@@ -19,22 +19,22 @@
         <div id="loginView" class="row justify-content-center">
             <div class="col-md-5">
                 <div class="card custom-card p-4">
-                    <h5 class="mb-3 text-center text-primary">Autenticación (MFA)</h5>
+                    <h5 class="mb-3 text-center text-primary">Autenticación Segura</h5>
                     <div id="loginError" class="alert alert-danger d-none small"></div>
-                    <form id="loginForm">
+                    <div id="loginSuccess" class="alert alert-success d-none small"></div>
+                    
+                    <form id="step1Form">
+                        <div class="mb-3"><label class="form-label small">Usuario</label><input type="text" class="form-control" id="username" value="admin" required></div>
+                        <div class="mb-3"><label class="form-label small">Contraseña</label><input type="password" class="form-control" id="password" value="admin123" required></div>
+                        <button type="submit" class="btn btn-simi w-100" id="btnStep1">Enviar Código por Correo</button>
+                    </form>
+
+                    <form id="step2Form" class="d-none mt-3">
                         <div class="mb-3">
-                            <label class="form-label small">Usuario</label>
-                            <input type="text" class="form-control" id="username" value="admin" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Contraseña</label>
-                            <input type="password" class="form-control" id="password" value="admin123" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small text-danger fw-bold">Token MFA (PIN 6 dígitos)</label>
+                            <label class="form-label small text-danger fw-bold">Token MFA (Revisa tu correo)</label>
                             <input type="text" class="form-control border-danger" id="mfaToken" placeholder="Ej: 123456" required>
                         </div>
-                        <button type="submit" class="btn btn-simi w-100">Verificar Identidad</button>
+                        <button type="submit" class="btn btn-success w-100">Verificar y Entrar</button>
                     </form>
                 </div>
             </div>
@@ -45,23 +45,11 @@
                 <div class="card custom-card p-4">
                     <h5 class="mb-3">Añadir Nuevo Producto</h5>
                     <form id="addForm">
-                        <div class="mb-3">
-                            <label class="form-label small">Nombre</label>
-                            <input type="text" class="form-control" id="nombre" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small">Descripción</label>
-                            <input type="text" class="form-control" id="desc">
-                        </div>
+                        <div class="mb-3"><label class="form-label small">Nombre</label><input type="text" class="form-control" id="nombre" required></div>
+                        <div class="mb-3"><label class="form-label small">Descripción</label><input type="text" class="form-control" id="desc"></div>
                         <div class="row">
-                            <div class="col-6 mb-3">
-                                <label class="form-label small">Precio ($)</label>
-                                <input type="number" class="form-control" id="precio" required>
-                            </div>
-                            <div class="col-6 mb-3">
-                                <label class="form-label small">Stock</label>
-                                <input type="number" class="form-control" id="stock" required>
-                            </div>
+                            <div class="col-6 mb-3"><label class="form-label small">Precio ($)</label><input type="number" class="form-control" id="precio" required></div>
+                            <div class="col-6 mb-3"><label class="form-label small">Stock</label><input type="number" class="form-control" id="stock" required></div>
                         </div>
                         <button type="submit" class="btn btn-simi w-100">Guardar Producto</button>
                     </form>
@@ -72,15 +60,7 @@
                     <h5 class="mb-3">Inventario Actual</h5>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Nombre</th>
-                                    <th>Descripción</th>
-                                    <th>Precio</th>
-                                    <th>Stock</th>
-                                </tr>
-                            </thead>
+                            <thead class="table-light"><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Precio</th><th>Stock</th></tr></thead>
                             <tbody id="tablaProductos"></tbody>
                         </table>
                     </div>
@@ -90,19 +70,40 @@
     </div>
 
     <script>
-        // Función para dar formato CLP (Ej: $ 1.500)
-        const formatearCLP = (monto) => {
-            return new Intl.NumberFormat('es-CL', {
-                style: 'currency',
-                currency: 'CLP',
-                minimumFractionDigits: 0
-            }).format(monto);
-        };
-
-        // Lógica de Autenticación MFA
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        const formatearCLP = (monto) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(monto);
+        
+        document.getElementById('step1Form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const res = await fetch('/api/login', {
+            document.getElementById('btnStep1').textContent = 'Enviando...';
+            document.getElementById('btnStep1').disabled = true;
+            
+            const res = await fetch('/api/login/step1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                document.getElementById('loginError').classList.add('d-none');
+                document.getElementById('loginSuccess').textContent = data.message;
+                document.getElementById('loginSuccess').classList.remove('d-none');
+                document.getElementById('step1Form').classList.add('d-none');
+                document.getElementById('step2Form').classList.remove('d-none');
+            } else {
+                document.getElementById('loginError').textContent = data.error;
+                document.getElementById('loginError').classList.remove('d-none');
+                document.getElementById('btnStep1').textContent = 'Enviar Código por Correo';
+                document.getElementById('btnStep1').disabled = false;
+            }
+        });
+
+        document.getElementById('step2Form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/login/step2', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -114,44 +115,32 @@
             const data = await res.json();
             
             if (res.ok) {
-                localStorage.setItem('simi_token', data.token); // Guardamos el Token
+                localStorage.setItem('simi_token', data.token);
                 mostrarERP();
             } else {
                 document.getElementById('loginError').textContent = data.error;
                 document.getElementById('loginError').classList.remove('d-none');
+                document.getElementById('loginSuccess').classList.add('d-none');
             }
         });
 
-        // Configuración de peticiones seguras inyectando el Token
         const fetchSeguro = async (url, options = {}) => {
             const token = localStorage.getItem('simi_token');
-            const headers = { ...options.headers, 'Authorization': `Bearer ${token}` };
-            const res = await fetch(url, { ...options, headers });
+            const res = await fetch(url, { ...options, headers: { ...options.headers, 'Authorization': `Bearer ${token}` } });
             if (res.status === 401 || res.status === 403) cerrarSesion();
             return res;
         };
 
-        // Cargar productos con la vista original
         async function cargarProductos() {
             const res = await fetchSeguro('/api/productos');
             const data = await res.json();
             const tbody = document.getElementById('tablaProductos');
             tbody.innerHTML = '';
-            
             data.forEach(p => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><span class="badge bg-secondary">${p.id}</span></td>
-                        <td class="fw-bold">${p.nombre}</td>
-                        <td class="text-muted small">${p.descripcion}</td>
-                        <td class="fw-bold text-success">${formatearCLP(p.precio)}</td>
-                        <td>${p.stock} un.</td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr><td><span class="badge bg-secondary">${p.id}</span></td><td class="fw-bold">${p.nombre}</td><td class="text-muted small">${p.descripcion}</td><td class="fw-bold text-success">${formatearCLP(p.precio)}</td><td>${p.stock} un.</td></tr>`;
             });
         }
 
-        // Agregar un producto nuevo
         document.getElementById('addForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             await fetchSeguro('/api/productos', {
@@ -168,7 +157,6 @@
             cargarProductos();
         });
 
-        // Muestra la vista del ERP ocultando el login
         function mostrarERP() {
             document.getElementById('loginView').classList.add('d-none');
             document.getElementById('erpView').classList.remove('d-none');
@@ -176,13 +164,7 @@
             cargarProductos();
         }
 
-        // Cierra sesión y recarga la página
-        function cerrarSesion() {
-            localStorage.removeItem('simi_token');
-            window.location.reload();
-        }
-
-        // Auto-login si ya hay un token válido guardado
+        function cerrarSesion() { localStorage.removeItem('simi_token'); window.location.reload(); }
         if (localStorage.getItem('simi_token')) mostrarERP();
     </script>
 </body>

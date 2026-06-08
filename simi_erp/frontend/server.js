@@ -21,8 +21,8 @@ const dbUser = 'postgres';
 const dbPassword = 'Inacap.2030';
 const dbName = 'simi_erp_db';
 const jwtSecret = 'simi_clave_secreta_mfa';
-const emailUser = 'fran.vidal.bernales@gmail.com';
-const emailPass = 'tu_clave_de_aplicacion';
+const emailUser = 'mfa.eva3.multicloud@gmail.com';
+const emailPass = 'ymve mous wkpx qoeo';
 // =========================================================
 
 // Configuración de conexión a AWS RDS usando las variables de arriba
